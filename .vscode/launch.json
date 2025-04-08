@@ -1,0 +1,13 @@
+{
+    "configurations": [
+    {
+        "name": "Crawler",
+        "program": "${workspaceFolder}/graph/crawler/crawler.js",
+        "request": "launch",
+        "skipFiles": [
+            "<node_internals>/**"
+        ],
+        "type": "node"
+    }
+    ]
+}
