@@ -10,11 +10,15 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const DEFAULT_DELAY = 400;
+function getDelay() {
+  // with jitter
+  return 850 + Math.random() * 400;
+}
+
 const MAX_RETRIES = 5;
 
 async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
-  await sleep(DEFAULT_DELAY); // always slow down globally
+  await sleep(getDelay()); // always slow down globally
 
   const res = await fetch(url, options);
 
