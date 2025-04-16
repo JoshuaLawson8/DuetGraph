@@ -12,7 +12,7 @@ function sleep(ms) {
 
 function getDelay() {
   // with jitter
-  return 0 + Math.random() * 200;
+  return 200 + Math.random() * 200;
 }
 
 const MAX_RETRIES = 5;
