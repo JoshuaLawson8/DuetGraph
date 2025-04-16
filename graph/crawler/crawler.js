@@ -35,9 +35,7 @@ async function crawlArtist(artistData, accessToken) {
         if (artists.length > 1) {
           // Create all artist nodes first
           for (const collabArtist of artists) {
-            console.time("getExistingArtist");
             const existingArtist = await getArtistById(collabArtist.id);
-            console.timeEnd("getExistingArtist");
             if (!(existingArtist.records.length > 0)) {
               // const collabArtistDetails = await getArtistDetails(accessToken, collabArtist.id);
 
