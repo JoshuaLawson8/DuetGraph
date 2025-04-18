@@ -5,3 +5,7 @@ REQUIRE a.spotifyId IS UNIQUE;
 CREATE INDEX IF NOT EXISTS
 FOR (a:Artist)
 ON (a.name);
+
+CREATE INDEX IF NOT EXISTS
+FOR (a:Artist)
+ON (a.spotifyId);
