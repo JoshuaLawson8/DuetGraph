@@ -1,0 +1,10 @@
+[
+    {
+        "clientId": "abc",
+        "clientSecret": "xyz"
+    },
+    {
+        "clientId": "def",
+        "clientSecret": "uvw"
+    }
+]
