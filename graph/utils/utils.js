@@ -12,13 +12,13 @@ function sleep(ms) {
 
 function getDelay() {
   // with jitter
-  return 200 + Math.random() * 200;
+  return 500 + Math.random() * 200;
 }
 
 const MAX_RETRIES = 5;
 
 async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
-  await sleep(getDelay()); // always slow down globally
+  await sleep(getDelay());  // global slow down
 
   const res = await fetch(url, options);
 
@@ -43,9 +43,7 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
     throw new Error(`❌ Spotify API error: ${res.status}`);
   }
 
-  return await res;
-}
-
-  
+  return res;
+} 
 
 module.exports = { loadCypherQuery, sleep, fetchWithRetry }
