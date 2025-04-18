@@ -2,29 +2,31 @@ const { createArtist, safeCreateOrUpdateEdge, getArtistByStatus, markArtistStatu
 const { fetchAccessToken, getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('../utils/spotify-api-utils');
 const { formatArtistForDb } = require('../utils/neo4j-graph-utils');
 
+
+// Metrics
 let APICallCount = 0;
 let fetchAlbumCount = 0;
 let newUserCount = 0;
 let fetchAlbumIdsCount = 0;
+const artistCache = new Set();
 
 async function crawlArtist(artistData, accessToken) {
   const artistId = artistData.spotifyId;
-  const artistCache = new Map(); 
   await markArtistStatus(artistId, 'inprogress');
 
   const albumIds = await getArtistAlbumIds(accessToken, artistId);
-  APICallCount = APICallCount + (Math.ceil(albumIds.length/50))
-  fetchAlbumIdsCount = fetchAlbumIdsCount + (Math.ceil(albumIds.length/50))
+  APICallCount = APICallCount + (Math.ceil(albumIds.length / 50))
+  fetchAlbumIdsCount = fetchAlbumIdsCount + (Math.ceil(albumIds.length / 50))
   console.log(`Call Count (fetchIds): ${fetchAlbumIdsCount}`)
 
   for (let i = 0; i < albumIds.length; i += 20) {
     const batchIds = albumIds.slice(i, i + 20);
-    console.time("getAlbums");
+    // console.time("getAlbums");
     const albumDetails = await getMultipleAlbums(accessToken, batchIds);
-    console.timeEnd("getAlbums");
+    // console.timeEnd("getAlbums");
     fetchAlbumCount++;
     APICallCount++;
-    console.log(`Call Count (fetching albums): ${fetchAlbumCount}`)
+    // console.log(`Call Count (fetching albums): ${fetchAlbumCount}`)
 
 
     for (const album of albumDetails) {
@@ -32,24 +34,31 @@ async function crawlArtist(artistData, accessToken) {
 
       for (const track of tracks) {
         const artists = track.artists;
+
         if (artists.length > 1) {
           // Create all artist nodes first
           for (const collabArtist of artists) {
-            const existingArtist = await getArtistById(collabArtist.id);
-            if (!(existingArtist.records.length > 0)) {
-              // const collabArtistDetails = await getArtistDetails(accessToken, collabArtist.id);
+            if (!artistCache.has(collabArtist.id)) {
+              // console.time("getExisitingArtists")
+              const existingArtist = await getArtistById(collabArtist.id);
+              // console.timeEnd("getExisitingArtists")
+              if (!(existingArtist.records.length > 0)) {
+                // const collabArtistDetails = await getArtistDetails(accessToken, collabArtist.id);
 
-              console.log(`Call Count (new user): ${newUserCount}`)
-              const newCollabArtist = formatArtistForDb({
-                spotifyId: collabArtist.id,
-                name: collabArtist.name,
-                image:  '', //collabArtistDetails.images?.[0]?.url ||
-                popularity: 0 // collabArtistDetails.popularity ||
-              });
-              await createArtist(newCollabArtist);
+                // console.log(`Call Count (new user): ${newUserCount}`)
+                const newCollabArtist = formatArtistForDb({
+                  spotifyId: collabArtist.id,
+                  name: collabArtist.name,
+                  image: '', //collabArtistDetails.images?.[0]?.url ||
+                  popularity: 0 // collabArtistDetails.popularity ||
+                });
+                await createArtist(newCollabArtist);
+              }
+              artistCache.add(collabArtist.id);
             }
           }
 
+          // console.time("createdEdges")
           // Create edges between all unique pairs (n*(n-1)/2)
           for (let i = 0; i < artists.length; i++) {
             for (let j = i + 1; j < artists.length; j++) {
@@ -64,6 +73,7 @@ async function crawlArtist(artistData, accessToken) {
               });
             }
           }
+          // console.timeEnd("createdEdges")
         }
       }
     }
@@ -73,8 +83,6 @@ async function crawlArtist(artistData, accessToken) {
 }
 
 async function crawler(seedName = null) {
-  console.log(`Call Count TOTAL: ${APICallCount}`)
-
   const accessToken = await fetchAccessToken();
 
   let artistToCrawl;
