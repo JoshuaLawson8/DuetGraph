@@ -1,58 +1,70 @@
+const { getAvailableKey } = require('./spotify-key-manager.js');
 const { fetchWithRetry } = require('./utils');
 require('dotenv').config();
 
 let cachedToken = null;
+let cachedKeyIndex = -1;
 let tokenFetchedAt = 0;
 const TOKEN_TTL = 3000 * 1000; // 3000 seconds in ms
 
-async function fetchAccessToken() {
+async function fetchAccessToken(cache = true) {
   const now = Date.now();
-
-  if (cachedToken && now - tokenFetchedAt < TOKEN_TTL) {
-    return cachedToken;
+  if (cachedToken && now - tokenFetchedAt < TOKEN_TTL && cache) {
+    return {token: cachedToken, keyIndex: cachedKeyIndex};
   }
 
-  const response = await fetchWithRetry('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: process.env.SPOTIFY_CLIENT_ID,
-      client_secret: process.env.SPOTIFY_CLIENT_SECRET,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  let creds;
+  try {
+    creds = await getAvailableKey();
+  } catch (err) {
+    console.error(err.message);
+    return fetchAccessToken(cache = false);
   }
+
+  const authHeader = Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString('base64');
+
+  const response = await fetchWithRetry(
+    'https://accounts.spotify.com/api/token',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${authHeader}`
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials'
+      })
+    }
+  );
 
   const data = await response.json();
   cachedToken = data.access_token;
+  cachedKeyIndex = creds.keyIndex;
   tokenFetchedAt = now;
 
-  return cachedToken;
+  return { token: cachedToken, keyIndex: creds.keyIndex };
 }
+
+
 async function getArtistFromSearch(access_token, artistName) {
-    const params = new URLSearchParams({
-        q: artistName,
-        type: "artist",
-        limit: 3
-    });
+  const params = new URLSearchParams({
+    q: artistName,
+    type: "artist",
+    limit: 3
+  });
 
-    const response = await fetchWithRetry(`https://api.spotify.com/v1/search?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${access_token}`
-        }
-    });
-
-    if (!response.ok) {
-        throw new Error(`Spotify API error: ${response.status}`);
+  const response = await fetchWithRetry(`https://api.spotify.com/v1/search?${params.toString()}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${access_token}`
     }
+  });
 
-    return await response.json();
+  if (!response.ok) {
+    throw new Error(`Spotify API error: ${response.status}`);
+  }
+
+  return await response.json();
 }
 
 /**
@@ -62,37 +74,37 @@ async function getArtistFromSearch(access_token, artistName) {
  * @returns {Promise<Array<string>>} - A promise that resolves to an array of album IDs.
  */
 async function getArtistAlbumIds(accessToken, artistId) {
-    const albumIds = [];
-    let nextUrl = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=50`;
-  
-    while (nextUrl) {
-      const response = await fetchWithRetry(nextUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Failed to fetch albums: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      albumIds.push(...data.items.map((album) => album.id));
-      nextUrl = data.next;
+  const albumIds = [];
+  let nextUrl = `https://api.spotify.com/v1/artists/${artistId}/albums?include_groups=album,single&limit=50`;
+
+  while (nextUrl) {
+    const response = await fetchWithRetry(nextUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch albums: ${response.status}`);
     }
-  
-    return albumIds;
+
+    const data = await response.json();
+    albumIds.push(...data.items.map((album) => album.id));
+    nextUrl = data.next;
   }
+
+  return albumIds;
+}
 
 
 async function getArtistDetails(accessToken, artistId) {
   const response = await fetchWithRetry(`https://api.spotify.com/v1/artists/${artistId}`, {
-      method: 'GET',
-      headers: {
-          Authorization: `Bearer ${accessToken}`
-      }
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
   });
 
   if (!response.ok) {
-      throw new Error(`Spotify API error: ${response.status}`);
+    throw new Error(`Spotify API error: ${response.status}`);
   }
 
   return await response.json();
@@ -105,18 +117,18 @@ async function getArtistDetails(accessToken, artistId) {
  * @returns {Promise<Array<Object>>} - A promise that resolves to an array of album objects.
  */
 async function getMultipleAlbums(accessToken, albumIds) {
-    const ids = albumIds.join(',');
-    const response = await fetchWithRetry(`https://api.spotify.com/v1/albums?ids=${ids}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-  
-    if (!response.ok) {
-      throw new Error(`Failed to fetch multiple albums: ${response.status}`);
-    }
-  
-    const data = await response.json();
-    return data.albums;
+  const ids = albumIds.join(',');
+  const response = await fetchWithRetry(`https://api.spotify.com/v1/albums?ids=${ids}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch multiple albums: ${response.status}`);
   }
-  
+
+  const data = await response.json();
+  return data.albums;
+}
+
 
 module.exports = { fetchAccessToken, getArtistFromSearch, getArtistAlbumIds, getArtistDetails, getMultipleAlbums };

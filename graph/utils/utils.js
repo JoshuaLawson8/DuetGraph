@@ -15,6 +15,15 @@ function getDelay() {
   return 500 + Math.random() * 200;
 }
 
+class TryLaterError extends Error {
+  constructor(message, retryAfterMs) {
+    super(message);
+    this.name = 'TryLaterError';
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+
 const MAX_RETRIES = 5;
 
 async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
@@ -24,9 +33,7 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
 
   if (res.status === 429) {
     const retryAfter = parseInt(res.headers.get("Retry-After") || "1", 10);
-    console.warn(`🚫 Rate limited. Retrying in ${retryAfter}s...`);
-    await sleep(retryAfter * 1000);
-    return fetchWithRetry(url, options, retries - 1);
+    throw new TryLaterError("Token Rate limited", retryAfter);
   }
 
   if ([502, 503, 504].includes(res.status)) {
@@ -46,4 +53,4 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
   return res;
 } 
 
-module.exports = { loadCypherQuery, sleep, fetchWithRetry }
+module.exports = { loadCypherQuery, sleep, fetchWithRetry, TryLaterError }

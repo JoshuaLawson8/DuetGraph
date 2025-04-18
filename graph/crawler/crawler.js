@@ -1,6 +1,8 @@
 const { createArtist, safeCreateOrUpdateEdge, getArtistByStatus, markArtistStatus, closeDriver, getArtistById } = require('../utils/neo4j-graph-utils');
 const { fetchAccessToken, getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('../utils/spotify-api-utils');
 const { formatArtistForDb } = require('../utils/neo4j-graph-utils');
+const { TryLaterError } = require('../utils/utils');
+const { markRateLimited } = require('../utils/spotify-key-manager');
 
 
 // Metrics
@@ -10,14 +12,15 @@ let newUserCount = 0;
 let fetchAlbumIdsCount = 0;
 const artistCache = new Set();
 
+
 async function crawlArtist(artistData, accessToken) {
   const artistId = artistData.spotifyId;
   await markArtistStatus(artistId, 'inprogress');
 
   const albumIds = await getArtistAlbumIds(accessToken, artistId);
-  APICallCount = APICallCount + (Math.ceil(albumIds.length / 50))
-  fetchAlbumIdsCount = fetchAlbumIdsCount + (Math.ceil(albumIds.length / 50))
-  console.log(`Call Count (fetchIds): ${fetchAlbumIdsCount}`)
+  APICallCount = APICallCount + (Math.ceil(albumIds.length / 50.0))
+  fetchAlbumIdsCount = fetchAlbumIdsCount + (Math.ceil(albumIds.length / 50.0))
+  // console.log(`Call Count (fetchIds): ${fetchAlbumIdsCount}`)
 
   for (let i = 0; i < albumIds.length; i += 20) {
     const batchIds = albumIds.slice(i, i + 20);
@@ -78,13 +81,12 @@ async function crawlArtist(artistData, accessToken) {
       }
     }
   }
-
   await markArtistStatus(artistId, 'crawled');
 }
 
 async function crawler(seedName = null) {
-  const accessToken = await fetchAccessToken();
-
+  const tokenObject = await fetchAccessToken();
+  const accessToken = tokenObject.token;
   let artistToCrawl;
   if (seedName) {
     const searchResults = await getArtistFromSearch(accessToken, seedName);
@@ -107,10 +109,26 @@ async function crawler(seedName = null) {
   }
 
   console.log("🔍 Crawling:", artistToCrawl.name);
-  await crawlArtist(artistToCrawl, accessToken);
+  await attemptCrawl(artistToCrawl, tokenObject, cache = true)
   await crawler();
 }
 
+async function attemptCrawl(artistToCrawl, tokenObject, cache) {
+  try {
+    await crawlArtist(artistToCrawl, tokenObject.token);
+  } catch (e) {
+    if (e instanceof TryLaterError) {
+      console.warn(`🔁 Retry triggered — marking key as timed out for ${e.retryAfterMs}s`);
+      markRateLimited(tokenObject.keyIndex, e.retryAfterMs);
+      const newTokenObject = await fetchAccessToken(cache = false);
+      // Retry recursively with a new key
+      return attemptCrawl(artistToCrawl, newTokenObject, cache = false);
+    }
+    throw e; // rethrow non-rate-limit errors
+  }
+}
+
 crawler(process.argv[2]).finally(async () => {
+  console.log("Closed Driver")
   await closeDriver();
 });
