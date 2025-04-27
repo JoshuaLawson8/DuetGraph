@@ -61,21 +61,25 @@ async function neo4jWrite(cypher, params = {}) {
  * @param {object} song - Song object with songUri, name, albumUri, image
  */
 async function safeCreateOrUpdateEdge(spotifyId1, spotifyId2, song) {
-    // Check for existing edge
     const existing = await neo4jRead(MATCH_EDGE_CYPHER, { spotifyId1, spotifyId2 });
 
     if (existing.records.length > 0) {
         const edgeProps = existing.records[0].get('r')?.properties ?? {};
         const existingUris = edgeProps.songUris || [];
+        
         if (existingUris.includes(song.songUri)) {
             return;
         }
-    } 
 
+        if (existingUris.length >= 50) {
+            return;
+        }
+    }
+
+    // Whether new or small existing edge: Add the new song
     const formatted = formatEdgeForDb({ songs: [song] });
     const params = { spotifyId1, spotifyId2, ...formatted };
-    const result = await neo4jWrite(CREATE_EDGE_CYPHER, params);
-    return result;
+    return await neo4jWrite(CREATE_EDGE_CYPHER, params);
 }
 
 /**
