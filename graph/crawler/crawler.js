@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const { createArtist, safeCreateOrUpdateEdge, getArtistByStatus, markArtistStatus, closeDriver, getArtistById } = require('../utils/neo4j-graph-utils');
 const { getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('../utils/spotify-api-utils');
 const { formatArtistForDb } = require('../utils/neo4j-graph-utils');

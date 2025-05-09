@@ -10,9 +10,9 @@ const MARK_CRAWLED_CYPHER = loadCypherQuery('mark-crawled.cypher');
 const MARK_INPROGRESS_CYPHER = loadCypherQuery('mark-inprogress.cypher');
 
 function initDBConn() {
-    const URI = 'neo4j://localhost:7687' // change this
-    const USER = 'duetgraph' // change this 
-    const PASSWORD = 'letsalllovelain' // change this
+    const URI = process.env.NEO4J_CONNECTION_URL
+    const USER = process.env.NEO4J_USER_NAME
+    const PASSWORD = process.env.NEO4J_USER_PASSWORD
 
     try {
         const driver = neo4j.driver(URI, neo4j.auth.basic(USER, PASSWORD))
@@ -27,7 +27,7 @@ const driver = initDBConn()
 async function neo4jRead(cypher, params = {}) {
     const session = driver.session({
         defaultAccessMode: neo4j.session.READ,
-        database: "neo4j",
+        database: process.env.NEO4J_DB_NAME,
     })
 
     try {
@@ -42,7 +42,7 @@ async function neo4jRead(cypher, params = {}) {
 async function neo4jWrite(cypher, params = {}) {
     const session = driver.session({
         defaultAccessMode: neo4j.session.WRITE,
-        database: "neo4j",
+        database: process.env.NEO4J_DB_NAME,
     })
 
     try {
@@ -66,12 +66,8 @@ async function safeCreateOrUpdateEdge(spotifyId1, spotifyId2, song) {
     if (existing.records.length > 0) {
         const edgeProps = existing.records[0].get('r')?.properties ?? {};
         const existingUris = edgeProps.songUris || [];
-        
-        if (existingUris.includes(song.songUri)) {
-            return;
-        }
 
-        if (existingUris.length >= 50) {
+        if (existingUris.includes(song.songUri)) {
             return;
         }
     }
