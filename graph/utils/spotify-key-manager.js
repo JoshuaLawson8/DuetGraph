@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { sleep } = require('./utils');
+
 
 const keys = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../keys.json')));
 const cooldowns = new Map(); // key index → resume timestamp
@@ -35,6 +35,10 @@ function markRateLimited(index, retryAfterSeconds = 60) {
   const retryAt = now() + retryAfterSeconds * 1000;
   cooldowns.set(index, retryAt);
   console.warn(`🛑 Key ${index} rate limited.`);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = {

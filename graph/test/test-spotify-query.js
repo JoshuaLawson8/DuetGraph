@@ -1,5 +1,5 @@
-const { getArtistFromSearch, fetchAccessToken } = require("../utils/spotify-api-utils");
-
+const { getArtistFromSearch } = require("../utils/spotify-api-utils");
+const { fetchAccessToken } = require("../utils/utils");
 
 async function test(){
     const access_token = await fetchAccessToken()

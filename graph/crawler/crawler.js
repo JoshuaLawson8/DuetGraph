@@ -1,7 +1,7 @@
 const { createArtist, safeCreateOrUpdateEdge, getArtistByStatus, markArtistStatus, closeDriver, getArtistById } = require('../utils/neo4j-graph-utils');
-const { fetchAccessToken, getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('../utils/spotify-api-utils');
+const { getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('../utils/spotify-api-utils');
 const { formatArtistForDb } = require('../utils/neo4j-graph-utils');
-const { TryLaterError } = require('../utils/utils');
+const { TryLaterError, fetchAccessToken } = require('../utils/utils');
 const { markRateLimited } = require('../utils/spotify-key-manager');
 
 
@@ -24,27 +24,27 @@ async function crawlArtist(artistData, accessToken) {
 
   for (let i = 0; i < albumIds.length; i += 20) {
     const batchIds = albumIds.slice(i, i + 20);
-    // console.time("getAlbums");
+    console.time("getAlbums");
     const albumDetails = await getMultipleAlbums(accessToken, batchIds);
-    // console.timeEnd("getAlbums");
+    console.timeEnd("getAlbums");
     fetchAlbumCount++;
     APICallCount++;
-    // console.log(`Call Count (fetching albums): ${fetchAlbumCount}`)
+    console.log(`Call Count (fetching albums): ${fetchAlbumCount}`)
 
 
     for (const album of albumDetails) {
-      const tracks = album.tracks.items;
+      const tracks = album?.tracks.items;
 
       for (const track of tracks) {
-        const artists = track.artists;
+        const artists = track?.artists;
 
         if (artists.length > 1) {
           // Create all artist nodes first
           for (const collabArtist of artists) {
             if (!artistCache.has(collabArtist.id)) {
-              // console.time("getExisitingArtists")
+              console.time("getExisitingArtists")
               const existingArtist = await getArtistById(collabArtist.id);
-              // console.timeEnd("getExisitingArtists")
+              console.timeEnd("getExisitingArtists")
               if (!(existingArtist.records.length > 0)) {
                 // const collabArtistDetails = await getArtistDetails(accessToken, collabArtist.id);
 
@@ -61,7 +61,7 @@ async function crawlArtist(artistData, accessToken) {
             }
           }
 
-          // console.time("createdEdges")
+          console.time("createdEdges")
           // Create edges between all unique pairs (n*(n-1)/2)
           for (let i = 0; i < artists.length; i++) {
             for (let j = i + 1; j < artists.length; j++) {
@@ -76,7 +76,7 @@ async function crawlArtist(artistData, accessToken) {
               });
             }
           }
-          // console.timeEnd("createdEdges")
+          console.timeEnd("createdEdges")
         }
       }
     }

@@ -1,49 +1,5 @@
-const { getAvailableKey } = require('./spotify-key-manager.js');
 const { fetchWithRetry } = require('./utils');
 require('dotenv').config();
-
-let cachedToken = null;
-let cachedKeyIndex = -1;
-let tokenFetchedAt = 0;
-const TOKEN_TTL = 3000 * 1000; // 3000 seconds in ms
-
-async function fetchAccessToken(cache = true) {
-  const now = Date.now();
-  if (cachedToken && now - tokenFetchedAt < TOKEN_TTL && cache) {
-    return {token: cachedToken, keyIndex: cachedKeyIndex};
-  }
-
-  let creds;
-  try {
-    creds = await getAvailableKey();
-  } catch (err) {
-    console.error(err.message);
-    return fetchAccessToken(cache = false);
-  }
-
-  const authHeader = Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString('base64');
-
-  const response = await fetchWithRetry(
-    'https://accounts.spotify.com/api/token',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${authHeader}`
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials'
-      })
-    }
-  );
-
-  const data = await response.json();
-  cachedToken = data.access_token;
-  cachedKeyIndex = creds.keyIndex;
-  tokenFetchedAt = now;
-
-  return { token: cachedToken, keyIndex: creds.keyIndex };
-}
 
 
 async function getArtistFromSearch(access_token, artistName) {
@@ -122,7 +78,7 @@ async function getMultipleAlbums(accessToken, albumIds) {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
-  if (!response.ok) {
+  if (!response.ok) { 
     throw new Error(`Failed to fetch multiple albums: ${response.status}`);
   }
 
@@ -131,4 +87,4 @@ async function getMultipleAlbums(accessToken, albumIds) {
 }
 
 
-module.exports = { fetchAccessToken, getArtistFromSearch, getArtistAlbumIds, getArtistDetails, getMultipleAlbums };
+module.exports = { getArtistFromSearch, getArtistAlbumIds, getArtistDetails, getMultipleAlbums };

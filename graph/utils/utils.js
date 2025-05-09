@@ -1,13 +1,15 @@
 
 const fs = require('fs');
 const path = require('path');
+const { getAvailableKey } = require('./spotify-key-manager.js');
+
 
 function loadCypherQuery(filename) {
-    return fs.readFileSync(path.join(__dirname, '../cypher', filename), 'utf8');
+  return fs.readFileSync(path.join(__dirname, '../cypher', filename), 'utf8');
 }
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function getDelay() {
@@ -24,7 +26,7 @@ class TryLaterError extends Error {
 }
 
 
-const MAX_RETRIES = 5;
+const MAX_RETRIES = 10;
 
 async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
   await sleep(getDelay());  // global slow down
@@ -38,12 +40,23 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
 
   if ([502, 503, 504].includes(res.status)) {
     if (retries > 0) {
-      console.warn(`⚠️ Server error ${res.status}. Retrying in 1s...`);
-      await sleep(1000);
+      console.warn(`⚠️ Server error ${res.status}. Retrying in 5s...`);
+      await sleep(5000);
       return fetchWithRetry(url, options, retries - 1);
     } else {
       throw new Error(`❌ Failed after retries: ${res.status}`);
     }
+  }
+
+  if (res.status === 401) {
+    // token has expired
+    const tokenObject = await fetchAccessToken();
+    return fetchWithRetry(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${tokenObject.token}`
+      }
+    }, retries-1)
   }
 
   if (!res.ok) {
@@ -51,6 +64,49 @@ async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
   }
 
   return res;
-} 
+}
 
-module.exports = { loadCypherQuery, sleep, fetchWithRetry, TryLaterError }
+let cachedToken = null;
+let cachedKeyIndex = -1;
+let tokenFetchedAt = 0;
+const TOKEN_TTL = 3000 * 1000; // 3000 seconds in ms
+
+async function fetchAccessToken(cache = true) {
+  const now = Date.now();
+  if (cachedToken && now - tokenFetchedAt < TOKEN_TTL && cache) {
+    return {token: cachedToken, keyIndex: cachedKeyIndex};
+  }
+
+  let creds;
+  try {
+    creds = await getAvailableKey();
+  } catch (err) {
+    console.error(err.message);
+    return fetchAccessToken(cache = false);
+  }
+
+  const authHeader = Buffer.from(`${creds.clientId}:${creds.clientSecret}`).toString('base64');
+
+  const response = await fetchWithRetry(
+    'https://accounts.spotify.com/api/token',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${authHeader}`
+      },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials'
+      })
+    }
+  );
+
+  const data = await response.json();
+  cachedToken = data.access_token;
+  cachedKeyIndex = creds.keyIndex;
+  tokenFetchedAt = now;
+
+  return { token: cachedToken, keyIndex: creds.keyIndex };
+}
+
+module.exports = { loadCypherQuery, sleep, fetchWithRetry, TryLaterError, fetchAccessToken }
