@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getShortestPath, updateArtistDetails } = require('../utils/api.js');
+const { getShortestPath, updateArtistDetails, getShortestPathName } = require('../utils/api.js');
 const { getAvailableKey, markRateLimited } = require('../utils/spotify-key-manager.js');
 const { getArtistFromSearch } = require('../utils/spotify-api-utils.js');
 
