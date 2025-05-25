@@ -5,15 +5,17 @@ const { getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDeta
 const { formatArtistForDb } = require('../utils/neo4j-graph-utils');
 const { TryLaterError, fetchAccessToken } = require('../utils/utils');
 const { markRateLimited } = require('../utils/spotify-key-manager');
-
+const { checkNeo4jSize } = require('../utils/db-monitor');
 
 // Metrics
 let APICallCount = 0;
 let fetchAlbumCount = 0;
-let newUserCount = 0;
 let fetchAlbumIdsCount = 0;
 const artistCache = new Set();
 
+setInterval(() => {
+  checkNeo4jSize();
+}, 5 * 60 * 1000); // every 5 minutes
 
 async function crawlArtist(artistData, accessToken) {
   const artistId = artistData.spotifyId;
