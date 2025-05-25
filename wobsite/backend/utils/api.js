@@ -2,6 +2,7 @@ const { neo4jRead, neo4jWrite } = require('./neo4j-graph-utils.js');
 const { loadCypherQuery } = require('./utils');
 
 const PATH_CYPHER = loadCypherQuery('shortest-path.cypher');
+const NAME_PATH_CYPHER = loadCypherQuery('shortest-path-name.cypher');
 const UPDATE_ARTIST_CYPHER = loadCypherQuery('update-superficial.cypher');
 
 async function getShortestPath(id1, id2) {
@@ -10,7 +11,7 @@ async function getShortestPath(id1, id2) {
 }
 
 async function getShortestPathName(name1, name2) {
-  const result = await neo4jRead(PATH_CYPHER, { name1, name2 });
+  const result = await neo4jRead(NAME_PATH_CYPHER, { name1, name2 });
   return result.records.map(r => r.get('p')); // assuming path is returned as `p`
 }
 
