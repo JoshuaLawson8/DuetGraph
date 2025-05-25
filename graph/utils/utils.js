@@ -14,7 +14,7 @@ function sleep(ms) {
 
 function getDelay() {
   // with jitter
-  return 500 + Math.random() * 200;
+  return 250 + Math.random() * 200;
 }
 
 class TryLaterError extends Error {
