@@ -8,6 +8,16 @@
             "<node_internals>/**"
         ],
         "type": "node"
+    },
+     {
+        "name": "API",
+        "program": "${workspaceFolder}/wobsite/backend/server.js",
+        "request": "launch",
+        "skipFiles": [
+            "<node_internals>/**"
+        ],
+        "type": "node",
+        "envFile": "${workspaceFolder}/wobsite/backend/.env",
     }
     ]
 }
