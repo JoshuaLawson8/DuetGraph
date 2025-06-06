@@ -29,11 +29,17 @@ router.get('/namePath/:name1/:name2', async (req, res) => {
       ids.push("");
       continue
     }
-
     else if (neo4jArtistObjectList.records.length > 1) { // list of artists
+      let localPop = []
       for (const object of neo4jArtistObjectList.records) {
-        setArtistDetails(artistObject.spotifyId)
+        if(object['_fields'][0].properties.popularity == 0){
+          localPop.push(await setArtistDetails(object['_fields'][0].properties.spotifyId))
+        } else {
+          localPop.push(object['_fields'][0].properties.popularity)
+        }
       }
+      const maxPopIndex = ids.indexOf(Math.max(...ids));
+      ids.push(neo4jArtistObjectList.records[maxPopIndex]["_fields"][0].properties.spotifyId)
     }
 
     else { // singleton yay! :D
@@ -63,7 +69,8 @@ async function setArtistDetails(spotifyId) {
     const accessToken = accessTokenObject.token;
     keyIndex = accessTokenObject.keyIndex;
     const result = await getArtistDetails(accessToken, spotifyId);
-    updateArtistDetails(spotifyId, { popularity: result.popularity, image: result.images[0].url })
+    // if 0, set to -1 so we know it's been checked
+    updateArtistDetails(spotifyId, { popularity: result.popularity === 0 ? -1 : result.popularity, image: result.images.length > 0 ? result.images[0].url : ""})
     return result.popularity;
   } catch (err) {
     if (err.message.includes("429") && keyIndex !== undefined) {
