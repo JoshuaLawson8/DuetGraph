@@ -24,6 +24,28 @@ async function getArtistFromSearch(access_token, artistName) {
 }
 
 /**
+ * Fetches detailed information for a single artist using their Spotify ID.
+ * @param {string} accessToken - The OAuth token for Spotify API.
+ * @param {string} artistId - The Spotify ID of the artist.
+ * @returns {Promise<Object>} - A promise that resolves to the artist object.
+ */
+async function getArtistDetails(accessToken, artistId) {
+  const response = await fetchWithRetry(`https://api.spotify.com/v1/artists/${artistId}`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Spotify API error: ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+
+/**
  * Fetches all album IDs for a given artist.
  * @param {string} accessToken - The OAuth token for Spotify API.
  * @param {string} artistId - The Spotify ID of the artist.

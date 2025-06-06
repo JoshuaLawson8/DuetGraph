@@ -1,6 +1,10 @@
 const neo4j = require('neo4j-driver');
-const { formatEdgeForDb, formatArtistForDb } = require('./graph-schema.js');
-const { loadCypherQuery } = require('./utils.js');
+const { loadCypherQuery } = require('./utils.js')
+
+const PATH_CYPHER = loadCypherQuery('shortest-path.cypher');
+const NAME_PATH_CYPHER = loadCypherQuery('shortest-path-name.cypher');
+const UPDATE_ARTIST_CYPHER = loadCypherQuery('update-superficial.cypher');
+const FETCH_ARTISTS = loadCypherQuery('fetch-artists.cypher');
 
 function initDBConn() {
     const URI = process.env.NEO4J_CONNECTION_URL
@@ -16,7 +20,6 @@ function initDBConn() {
 }
 
 const driver = initDBConn()
-
 
 async function neo4jRead(cypher, params = {}) {
     const session = driver.session({
@@ -47,4 +50,23 @@ async function neo4jWrite(cypher, params = {}) {
     }
 }
 
-module.exports = {neo4jRead, neo4jWrite, }
+async function getShortestPath(id1, id2) {
+    set
+    const result = await neo4jRead(PATH_CYPHER, { id1, id2 });
+    return result.records.map(r => r.get('p')); // assuming path is returned as `p`
+}
+
+async function getShortestPathName(name1, name2) {
+    const result = await neo4jRead(NAME_PATH_CYPHER, { name1, name2 });
+    return result.records.map(r => r.get('p')); // assuming path is returned as `p`
+}
+
+async function updateArtistDetails(spotifyId, updates) {
+    return await neo4jWrite(UPDATE_ARTIST_CYPHER, { spotifyId, ...updates });
+}
+
+async function getArtistsFromName(name) {
+    return await neo4jRead(FETCH_ARTISTS, { name })
+}
+
+module.exports = { neo4jRead, neo4jWrite, getShortestPath, getShortestPathName, updateArtistDetails, getArtistsFromName }
