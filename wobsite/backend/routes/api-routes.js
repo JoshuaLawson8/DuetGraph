@@ -38,7 +38,7 @@ router.get('/namePath/:name1/:name2', async (req, res) => {
           localPop.push(object['_fields'][0].properties.popularity)
         }
       }
-      const maxPopIndex = ids.indexOf(Math.max(...ids));
+      const maxPopIndex = localPop.indexOf(Math.max(...localPop));
       ids.push(neo4jArtistObjectList.records[maxPopIndex]["_fields"][0].properties.spotifyId)
     }
 
@@ -46,7 +46,7 @@ router.get('/namePath/:name1/:name2', async (req, res) => {
       const artistObject = neo4jArtistObjectList.records[0]["_fields"][0].properties;
       if (artistObject.popularity == 0) {
         try {
-          setArtistDetails(artistObject.spotifyId)
+          await setArtistDetails(artistObject.spotifyId)
         } catch (e) {
           console.log("failed to set popularity/image url")
         }
