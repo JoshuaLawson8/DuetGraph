@@ -67,14 +67,14 @@ export default function ArtistDisplay() {
           href={spotifyLink(segment.start.properties.spotifyId)}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-white p-4 rounded-lg shadow flex flex-col items-center w-full sm:w-[300px] hover:opacity-90 transition"
+          className="bg-white p-2 sm:p-4 rounded-lg shadow flex flex-col items-center w-full sm:max-w-xs hover:opacity-90 transition"
         >
           <img
             src={artistImage(segment.start.properties.image)}
             alt={segment.start.properties.name}
-            className="w-48 h-48 object-cover rounded-lg mb-2"
+            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg mb-2"
           />
-          <div className="text-xl font-semibold text-center">{segment.start.properties.name}</div>
+          <div className="text-lg sm:text-xl font-semibold text-center">{segment.start.properties.name}</div>
         </a>
       );
 
@@ -86,7 +86,7 @@ export default function ArtistDisplay() {
               window.location.href = currentUri;
             }
           }}
-          className="bg-gray-100 p-4 rounded-lg shadow w-full sm:w-[500px] flex items-center justify-between cursor-pointer hover:bg-gray-200"
+          className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow w-full sm:max-w-lg flex items-center justify-between cursor-pointer hover:bg-gray-200"
         >
           <button
             onClick={(e) => {
@@ -94,18 +94,17 @@ export default function ArtistDisplay() {
               changeSong(key, -1, songNames.length);
             }}
             className={`text-xl font-bold ${songIndex === 0 ? 'text-gray-400' : ''}`}
-            style={{ cursor: songIndex === 0 ? 'default' : 'pointer' }}
             disabled={songIndex === 0}
           >◀</button>
-          <div className="flex items-center space-x-4 w-3/4 truncate">
+          <div className="flex items-center space-x-2 sm:space-x-4 w-3/4 truncate">
             <img
               src={currentImage}
               alt="song"
-              className="w-16 h-16 object-cover rounded"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded"
             />
             <div className="text-left truncate">
-              <div className="font-medium text-lg truncate">{currentSong}</div>
-              <div className="text-sm text-gray-600 truncate">
+              <div className="font-medium text-base sm:text-lg truncate">{currentSong}</div>
+              <div className="text-xs sm:text-sm text-gray-600 truncate">
                 {segment.start.properties.name}, {segment.end.properties.name}
               </div>
             </div>
@@ -116,7 +115,6 @@ export default function ArtistDisplay() {
               changeSong(key, 1, songNames.length);
             }}
             className={`text-xl font-bold ${songIndex === songNames.length - 1 ? 'text-gray-400' : ''}`}
-            style={{ cursor: songIndex === songNames.length - 1 ? 'default' : 'pointer' }}
             disabled={songIndex === songNames.length - 1}
           >▶</button>
         </div>
@@ -129,21 +127,21 @@ export default function ArtistDisplay() {
             href={spotifyLink(segment.end.properties.spotifyId)}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white p-4 rounded-lg shadow flex flex-col items-center w-full sm:w-[300px] hover:opacity-90 transition"
+            className="bg-white p-2 sm:p-4 rounded-lg shadow flex flex-col items-center w-full sm:max-w-xs hover:opacity-90 transition"
           >
             <img
               src={artistImage(segment.end.properties.image)}
               alt={segment.end.properties.name}
-              className="w-48 h-48 object-cover rounded-lg mb-2"
+              className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg mb-2"
             />
-            <div className="text-xl font-semibold text-center">{segment.end.properties.name}</div>
+            <div className="text-lg sm:text-xl font-semibold text-center">{segment.end.properties.name}</div>
           </a>
         );
       }
     });
 
     return (
-      <div className="flex flex-col items-center space-y-6">
+      <div className="flex flex-col items-center space-y-4 sm:space-y-6">
         {elements}
       </div>
     );
@@ -151,20 +149,20 @@ export default function ArtistDisplay() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="space-y-4 mb-4">
+      <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4">
         <input
           type="text"
           placeholder="Type artist 1..."
           value={artist1}
           onChange={(e) => setArtist1(e.target.value)}
-          className="p-3 border border-gray-400 rounded-md w-full"
+          className="p-2 sm:p-3 border border-gray-400 rounded-md w-full"
         />
         <input
           type="text"
           placeholder="Type artist 2..."
           value={artist2}
           onChange={(e) => setArtist2(e.target.value)}
-          className="p-3 border border-gray-400 rounded-md w-full"
+          className="p-2 sm:p-3 border border-gray-400 rounded-md w-full"
         />
         <button
           onClick={fetchPath}
@@ -173,9 +171,9 @@ export default function ArtistDisplay() {
         >
           {loading ? "Loading..." : "Find Connection"}
         </button>
-        {error && <p className="text-red-600">{error}</p>}
+        {error && <p className="text-red-600 text-sm sm:text-base">{error}</p>}
       </div>
-      <div className="flex-1 overflow-y-auto pr-2">
+      <div className="flex-1 overflow-y-auto pr-1 sm:pr-2">
         {renderPath()}
       </div>
     </div>
