@@ -4,9 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "crawl": "node ./crawler/crawler.js",
-    "api": "node api.js"
+    "crawl": "node ./crawler/crawler.js"
   },
   "author": "Joshua Lawson",
   "license": "MIT",
