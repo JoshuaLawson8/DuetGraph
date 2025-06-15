@@ -1,11 +1,11 @@
 require('dotenv').config()
 
-const { createArtist, safeCreateOrUpdateEdge, getArtistByStatus, markArtistStatus, closeDriver, getArtistById } = require('../utils/neo4j-graph-utils');
-const { getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('../utils/spotify-api-utils');
-const { formatArtistForDb } = require('../utils/neo4j-graph-utils');
-const { TryLaterError, fetchAccessToken } = require('../utils/utils');
-const { markRateLimited } = require('../utils/spotify-key-manager');
-const { checkNeo4jSize } = require('../utils/db-monitor');
+const { createArtist, safeCreateOrUpdateEdge, getArtistByStatus, markArtistStatus, closeDriver, getArtistById } = require('./utils/neo4j-graph-utils');
+const { getArtistFromSearch, getArtistAlbumIds, getMultipleAlbums, getArtistDetails } = require('./utils/spotify-api-utils');
+const { formatArtistForDb } = require('./utils/neo4j-graph-utils');
+const { TryLaterError, fetchAccessToken } = require('./utils/utils');
+const { markRateLimited } = require('./utils/spotify-key-manager');
+const { checkNeo4jSize } = require('./utils/db-monitor');
 
 // Metrics
 let APICallCount = 0;
