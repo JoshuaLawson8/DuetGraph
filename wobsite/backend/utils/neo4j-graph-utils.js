@@ -21,7 +21,7 @@ async function initDBConn() {
     while (true) {
         try {
             await driver.getServerInfo();
-            console.log("Connected to Neo4j! Yippee!!!");
+            console.log("Connected to Neo4j!");
             return driver;
         } catch (err) {
             console.log(`Neo4j not ready, retrying in 5s...\n${err}`);
