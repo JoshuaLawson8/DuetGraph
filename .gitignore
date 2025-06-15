@@ -137,4 +137,5 @@ dist
 
 keys.json
 
-./db
+db/data
+db/import
