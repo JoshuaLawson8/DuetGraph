@@ -4,7 +4,7 @@ const { exec } = require('child_process');
 function checkNeo4jSize() {
     return new Promise((resolve, reject) => {
         const NEO4J_DATA_PATH = process.env.DB_PATH;
-        const MAX_SIZE_BYTES = 350 * 1024 ** 3; // 200 GB
+        const MAX_SIZE_BYTES = process.env.DB_SIZE;
 
         const cmd = `powershell -Command "(Get-ChildItem -Recurse -Force '${NEO4J_DATA_PATH}' | Measure-Object -Property Length -Sum).Sum"`;
 

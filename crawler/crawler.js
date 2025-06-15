@@ -13,9 +13,12 @@ let fetchAlbumCount = 0;
 let fetchAlbumIdsCount = 0;
 const artistCache = new Set();
 
-setInterval(() => {
-  checkNeo4jSize();
-}, 5 * 60 * 1000); // every 5 minutes
+if(process.env.DB_PATH){
+  console.log(`Logging DB_SIZE of ${process.env.DB_SIZE/(1024**3)} gbs at ${process.env.DB_PATH}`)
+  setInterval(() => {
+    checkNeo4jSize();
+  }, 5 * 60 * 1000); // every 5 minutes
+}
 
 async function crawlArtist(artistData, accessToken) {
   const artistId = artistData.spotifyId;
