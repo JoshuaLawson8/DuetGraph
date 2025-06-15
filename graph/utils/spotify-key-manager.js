@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 
-const keys = JSON.parse(fs.readFileSync(path.join(__dirname, '/../../keys.json')));
+const keys = JSON.parse(fs.readFileSync(path.join(__dirname, '/../keys.json')));
 const cooldowns = new Map(); // key index → resume timestamp
 
 function now() {
