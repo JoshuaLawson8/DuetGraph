@@ -17,7 +17,7 @@ if(process.env.DB_PATH){
   console.log(`Logging DB_SIZE of ${process.env.DB_SIZE/(1024**3)} gbs at ${process.env.DB_PATH}`)
   setInterval(() => {
     checkNeo4jSize();
-  }, 5 * 60 * 1000); // every 5 minutes
+  }, 60 * 1000); // every 1 min
 }
 
 async function crawlArtist(artistData, accessToken) {
