@@ -93,10 +93,11 @@ export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = ""
             if (currentUri) {
               let url = ""
               try{
-                url = "https://open.spotify.com/track/6Wlq9rqkxrqj5Kls4Kw14H" + currentUri.split(":")[2]
+                url = "https://open.spotify.com/track/" + currentUri.split(":")[2]
               } catch {
                 url = currentUri
               }
+              console.log("currentURL", url)
               window.location.href = url;
             }
           }}
