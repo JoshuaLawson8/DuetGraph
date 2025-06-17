@@ -1,8 +1,13 @@
-import { useParams } from "react-router-dom";
-import ArtistDisplay from "./components/ArtistDisplay.jsx";
+import { useParams, useNavigate } from "react-router-dom";
+import ArtistDisplay from "./components/ArtistDisplay";
 
 export default function DuetGraph() {
   const { artist1, artist2 } = useParams();
+  const navigate = useNavigate();
+
+  const handleSearch = (a1, a2) => {
+    navigate(`/${encodeURIComponent(a1)}/${encodeURIComponent(a2)}`);
+  };
 
   return (
     <div className="flex flex-col sm:flex-row min-h-screen">
@@ -25,7 +30,11 @@ export default function DuetGraph() {
       </div>
 
       <div className="w-full sm:w-1/2 bg-blue-100 p-6 sm:p-12 flex-1 flex flex-col">
-        <ArtistDisplay initialArtist1={artist1} initialArtist2={artist2} />
+        <ArtistDisplay
+          artist1={artist1 || ""}
+          artist2={artist2 || ""}
+          onSearch={handleSearch}
+        />
       </div>
     </div>
   );

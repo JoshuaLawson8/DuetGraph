@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = "" }) {
-  const [artist1, setArtist1] = useState(initialArtist1);
-  const [artist2, setArtist2] = useState(initialArtist2);
+export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
+  const [input1, setInput1] = useState(artist1);
+  const [input2, setInput2] = useState(artist2);
   const [pathData, setPathData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [songIndices, setSongIndices] = useState({});
+  const navigate = useNavigate();
 
-
-  useEffect(() => {
-    if (initialArtist1 && initialArtist2) {
-      fetchPath(initialArtist1, initialArtist2);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialArtist1, initialArtist2]);
-
-  const fetchPath = async () => {
-    if (!artist1.trim() || !artist2.trim()) {
+  const fetchPath = useCallback(async (a1, a2) => {
+    if (!a1.trim() || !a2.trim()) {
       setError("Both artist names are required.");
       return;
     }
@@ -25,7 +19,7 @@ export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = ""
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/namePath/${encodeURIComponent(artist1)}/${encodeURIComponent(artist2)}`);
+      const response = await fetch(`/api/namePath/${encodeURIComponent(a1)}/${encodeURIComponent(a2)}`);
       if (!response.ok) throw new Error("Failed to fetch artist path");
       const data = await response.json();
       if (!Array.isArray(data)) throw new Error("Invalid response format");
@@ -38,10 +32,22 @@ export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = ""
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (artist1 && artist2) {
+      setInput1(artist1);
+      setInput2(artist2);
+      fetchPath(artist1, artist2);
+    }
+  }, [artist1, artist2, fetchPath]);
+
+  const handleSearch = () => {
+    navigate(`/${encodeURIComponent(input1)}/${encodeURIComponent(input2)}`);
   };
 
   const changeSong = (key, direction, length) => {
-    setSongIndices((prev) => {
+    setSongIndices(prev => {
       const current = prev[key] || 0;
       const next = (current + direction + length) % length;
       return { ...prev, [key]: next };
@@ -70,120 +76,58 @@ export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = ""
       const spotifyLink = (id) => `https://open.spotify.com/artist/${id}`;
 
       elements.push(
-        <a
-          key={`artist-${index}-start`}
-          href={spotifyLink(segment.start.properties.spotifyId)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-white p-2 sm:p-4 rounded-lg shadow flex flex-col items-center w-full sm:max-w-xs hover:opacity-90 transition"
-        >
-          <img
-            src={artistImage(segment.start.properties.image)}
-            alt={segment.start.properties.name}
-            className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg mb-2"
-          />
+        <a key={`artist-${index}-start`} href={spotifyLink(segment.start.properties.spotifyId)} target="_blank" rel="noopener noreferrer"
+          className="bg-white p-2 sm:p-4 rounded-lg shadow flex flex-col items-center w-full sm:max-w-xs hover:opacity-90 transition">
+          <img src={artistImage(segment.start.properties.image)} alt={segment.start.properties.name} className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg mb-2" />
           <div className="text-lg sm:text-xl font-semibold text-center">{segment.start.properties.name}</div>
         </a>
       );
 
       elements.push(
-        <div
-          key={`song-${index}`}
-          onClick={() => {
-            if (currentUri) {
-              let url = ""
-              try{
-                url = "https://open.spotify.com/track/" + currentUri.split(":")[2]
-              } catch {
-                url = currentUri
-              }
-              console.log("currentURL", url)
-              window.location.href = url;
-            }
-          }}
-          className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow w-full sm:max-w-lg flex items-center justify-between cursor-pointer hover:bg-gray-200"
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              changeSong(key, -1, songNames.length);
-            }}
+        <div key={`song-${index}`} onClick={() => {
+          if (currentUri) {
+            const parts = currentUri.split(":");
+            const url = parts.length === 3 ? `https://open.spotify.com/track/${parts[2]}` : currentUri;
+            window.location.href = url;
+          }
+        }}
+          className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow w-full sm:max-w-lg flex items-center justify-between cursor-pointer hover:bg-gray-200">
+          <button onClick={(e) => { e.stopPropagation(); changeSong(key, -1, songNames.length); }}
             className={`text-xl font-bold ${songIndex === 0 ? 'text-gray-400' : ''}`}
-            disabled={songIndex === 0}
-          >◀</button>
+            disabled={songIndex === 0}>◀</button>
           <div className="flex items-center space-x-2 sm:space-x-4 w-3/4 truncate">
-            <img
-              src={currentImage}
-              alt="song"
-              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded"
-            />
+            <img src={currentImage} alt="song" className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded" />
             <div className="text-left truncate">
               <div className="font-medium text-base sm:text-lg truncate">{currentSong}</div>
-              <div className="text-xs sm:text-sm text-gray-600 truncate">
-                {segment.start.properties.name}, {segment.end.properties.name}
-              </div>
+              <div className="text-xs sm:text-sm text-gray-600 truncate">{segment.start.properties.name}, {segment.end.properties.name}</div>
             </div>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              changeSong(key, 1, songNames.length);
-            }}
+          <button onClick={(e) => { e.stopPropagation(); changeSong(key, 1, songNames.length); }}
             className={`text-xl font-bold ${songIndex === songNames.length - 1 ? 'text-gray-400' : ''}`}
-            disabled={songIndex === songNames.length - 1}
-          >▶</button>
+            disabled={songIndex === songNames.length - 1}>▶</button>
         </div>
       );
 
       if (index === segments.length - 1) {
         elements.push(
-          <a
-            key={`artist-${index}-end`}
-            href={spotifyLink(segment.end.properties.spotifyId)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white p-2 sm:p-4 rounded-lg shadow flex flex-col items-center w-full sm:max-w-xs hover:opacity-90 transition"
-          >
-            <img
-              src={artistImage(segment.end.properties.image)}
-              alt={segment.end.properties.name}
-              className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg mb-2"
-            />
+          <a key={`artist-${index}-end`} href={spotifyLink(segment.end.properties.spotifyId)} target="_blank" rel="noopener noreferrer"
+            className="bg-white p-2 sm:p-4 rounded-lg shadow flex flex-col items-center w-full sm:max-w-xs hover:opacity-90 transition">
+            <img src={artistImage(segment.end.properties.image)} alt={segment.end.properties.name} className="w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg mb-2" />
             <div className="text-lg sm:text-xl font-semibold text-center">{segment.end.properties.name}</div>
           </a>
         );
       }
     });
 
-    return (
-      <div className="flex flex-col items-center space-y-4 sm:space-y-6">
-        {elements}
-      </div>
-    );
+    return <div className="flex flex-col items-center space-y-4 sm:space-y-6">{elements}</div>;
   };
 
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4">
-        <input
-          type="text"
-          placeholder="Type artist 1..."
-          value={artist1}
-          onChange={(e) => setArtist1(e.target.value)}
-          className="p-2 sm:p-3 border border-gray-400 rounded-md w-full"
-        />
-        <input
-          type="text"
-          placeholder="Type artist 2..."
-          value={artist2}
-          onChange={(e) => setArtist2(e.target.value)}
-          className="p-2 sm:p-3 border border-gray-400 rounded-md w-full"
-        />
-        <button
-          onClick={fetchPath}
-          className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-full"
-          disabled={loading}
-        >
+        <input type="text" placeholder="Type artist 1..." value={input1} onChange={(e) => setInput1(e.target.value)} className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
+        <input type="text" placeholder="Type artist 2..." value={input2} onChange={(e) => setInput2(e.target.value)} className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
+        <button onClick={handleSearch} className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-full" disabled={loading}>
           {loading ? "Loading..." : "Find Connection"}
         </button>
         {error && <p className="text-red-600 text-sm sm:text-base">{error}</p>}
