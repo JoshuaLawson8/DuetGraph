@@ -5,6 +5,7 @@ const PATH_CYPHER = loadCypherQuery('shortest-path.cypher');
 const NAME_PATH_CYPHER = loadCypherQuery('shortest-path-name.cypher');
 const UPDATE_ARTIST_CYPHER = loadCypherQuery('update-superficial.cypher');
 const FETCH_ARTISTS = loadCypherQuery('fetch-artists.cypher');
+const TOP_ARTIST_SEARCH = loadCypherQuery('top-artist-search.cypher');
 let driver;
 
 const ready = (async () => {
@@ -84,4 +85,9 @@ async function getArtistsFromName(name) {
     return await neo4jRead(FETCH_ARTISTS, { name })
 }
 
-module.exports = { neo4jRead, neo4jWrite, getShortestPath, getShortestPathName, updateArtistDetails, getArtistsFromName }
+async function getArtistSearchResults(name) {
+    await ready;
+    return await neo4jRead(TOP_ARTIST_SEARCH, { name });
+}
+
+module.exports = { neo4jRead, neo4jWrite, getShortestPath, getShortestPathName, updateArtistDetails, getArtistsFromName, getArtistSearchResults }
