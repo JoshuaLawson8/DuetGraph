@@ -91,7 +91,13 @@ export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = ""
           key={`song-${index}`}
           onClick={() => {
             if (currentUri) {
-              window.location.href = currentUri;
+              let url = ""
+              try{
+                url = "https://open.spotify.com/track/6Wlq9rqkxrqj5Kls4Kw14H" + currentUri.split(":")[2]
+              } catch {
+                url = currentUri
+              }
+              window.location.href = url;
             }
           }}
           className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow w-full sm:max-w-lg flex items-center justify-between cursor-pointer hover:bg-gray-200"
