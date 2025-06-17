@@ -1,12 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-export default function ArtistDisplay() {
-  const [artist1, setArtist1] = useState("");
-  const [artist2, setArtist2] = useState("");
+export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = "" }) {
+  const [artist1, setArtist1] = useState(initialArtist1);
+  const [artist2, setArtist2] = useState(initialArtist2);
   const [pathData, setPathData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [songIndices, setSongIndices] = useState({});
+
+  useEffect(() => {
+    if (initialArtist1 && initialArtist2) {
+      fetchPath(initialArtist1, initialArtist2);
+    }
+  }, [initialArtist1, initialArtist2]);
+
 
   const fetchPath = async () => {
     if (!artist1.trim() || !artist2.trim()) {
