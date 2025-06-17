@@ -1,4 +1,3 @@
-import React from "react";
 import ArtistDisplay from "./components/ArtistDisplay";
 
 export default function DuetGraph() {
