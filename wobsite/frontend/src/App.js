@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import DuetGraph from "./components/DuetGraph";
+import DuetGraph from "./DuetGraph.js";
 
 export default function App() {
   return (

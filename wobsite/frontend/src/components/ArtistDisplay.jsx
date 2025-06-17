@@ -8,12 +8,13 @@ export default function ArtistDisplay({ initialArtist1 = "", initialArtist2 = ""
   const [error, setError] = useState(null);
   const [songIndices, setSongIndices] = useState({});
 
+
   useEffect(() => {
     if (initialArtist1 && initialArtist2) {
       fetchPath(initialArtist1, initialArtist2);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialArtist1, initialArtist2]);
-
 
   const fetchPath = async () => {
     if (!artist1.trim() || !artist2.trim()) {

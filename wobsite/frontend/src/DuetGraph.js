@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import ArtistDisplay from "./ArtistDisplay";
+import ArtistDisplay from "./components/ArtistDisplay.jsx";
 
 export default function DuetGraph() {
   const { artist1, artist2 } = useParams();
