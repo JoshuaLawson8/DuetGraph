@@ -22,7 +22,11 @@ router.get('/search/:name', async (req, res) => {
     const records = neo4jRecordsToObjects((await getArtistSearchResults(name)).records);
     for (const record of records){
       if(record.image == ""){
-        setArtistDetails(record.spotifyId)
+        try{
+          setArtistDetails(record.spotifyId)
+        } catch (e){
+          console.log("unable to set artist details")
+        }
       }
     }
     res.json(records);
