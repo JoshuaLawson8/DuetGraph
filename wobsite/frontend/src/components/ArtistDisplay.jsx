@@ -105,7 +105,7 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
 
   const getImageSrc = (image) => {
     if (image === "") {
-      return require("../components/icegif-loading.gif");
+      return require("../resources/icegif-loading.gif");
     }
     if (image === " ") {
       return require("../resources/putidevil-miku-questionmark.jpg");
