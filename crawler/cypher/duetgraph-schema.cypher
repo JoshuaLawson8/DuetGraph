@@ -9,3 +9,7 @@ ON (a.name);
 CREATE INDEX IF NOT EXISTS
 FOR (a:Artist)
 ON (a.spotifyId);
+
+CREATE INDEX IF NOT EXISTS
+FOR (a:Artist)
+ON (a.nameLower);
