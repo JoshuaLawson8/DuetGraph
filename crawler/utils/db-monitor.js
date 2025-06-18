@@ -11,12 +11,11 @@ function checkNeo4jSize() {
         require('child_process').exec(cmd, (err, stdout) => {
             if (err) return reject(err);
             const size = parseInt(stdout.trim(), 10);
-            console.log(size)
             if (isNaN(size)) return reject(new Error('Invalid size'));
 
             console.log(`DB size: ${(size / 1024 ** 3).toFixed(2)} GB`);
             if (size > MAX_SIZE_BYTES) {
-                console.warn('Exceeded 200 GB. Exiting...');
+                console.warn('Exceeded limit. Exiting...');
                 process.kill(process.pid, 'SIGINT');
             } else {
                 resolve();

@@ -14,7 +14,7 @@ let fetchAlbumIdsCount = 0;
 const artistCache = new Set();
 
 if(process.env.DB_PATH){
-  console.log(`Logging DB_SIZE of ${process.env.DB_SIZE/(1024**3)} gbs at ${process.env.DB_PATH}`)
+  console.warn(`LOGGING: Limit of ${process.env.DB_SIZE/(1024**3)} gbs at ${process.env.DB_PATH}`)
   setInterval(() => {
     checkNeo4jSize();
   }, 60 * 1000); // every 1 min
