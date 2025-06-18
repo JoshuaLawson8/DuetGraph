@@ -64,12 +64,16 @@ async function neo4jWrite(cypher, params = {}) {
 }
 
 async function getShortestPath(id1, id2) {
+    if(id1 === id2)
+        return [];
     await ready;
     const result = await neo4jRead(PATH_CYPHER, { id1, id2 });
     return result.records.map(r => r.get('p')); // assuming path is returned as `p`
 }
 
 async function getShortestPathName(name1, name2) {
+    if(name1 === name2)
+        return [];
     await ready;
     const result = await neo4jRead(NAME_PATH_CYPHER, { name1, name2 });
     return result.records.map(r => r.get('p')); // assuming path is returned as `p`
