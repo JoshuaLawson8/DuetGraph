@@ -109,4 +109,27 @@ async function fetchAccessToken(cache = true) {
   return { token: cachedToken, keyIndex: creds.keyIndex };
 }
 
-module.exports = { loadCypherQuery, sleep, fetchWithRetry, TryLaterError, fetchAccessToken }
+function neo4jRecordsToObjects(records) {
+  return records.map(record => {
+    return record.keys.reduce((obj, key, idx) => {
+      let value = record._fields[idx];
+
+      // Handle Neo4j Integer (has low/high properties)
+      if (value && typeof value === 'object' && 'low' in value && 'high' in value) {
+        // If high is non-zero, you'd need to handle large integers; otherwise just use low
+        if (value.high !== 0) {
+          // Optional: Use a BigInt if needed
+          value = BigInt(value.high) << 32n | BigInt(value.low >>> 0);
+        } else {
+          value = value.low;
+        }
+      }
+
+      obj[key] = value;
+      return obj;
+    }, {});
+  });
+}
+
+
+module.exports = { loadCypherQuery, sleep, fetchWithRetry, TryLaterError, fetchAccessToken, neo4jRecordsToObjects }

@@ -3,8 +3,7 @@ const router = express.Router();
 const { getShortestPath, updateArtistDetails, getArtistSearchResults, getArtistsFromName } = require('../utils/neo4j-graph-utils.js');
 const { getAvailableKey, markRateLimited } = require('../utils/spotify-key-manager.js');
 const { getArtistFromSearch, getArtistDetails } = require('../utils/spotify-api-utils.js');
-const { fetchAccessToken } = require('../utils/utils.js');
-
+const { fetchAccessToken, neo4jRecordsToObjects } = require('../utils/utils.js');
 
 router.get('/idPath/:id1/:id2', async (req, res) => {
 
@@ -21,8 +20,11 @@ router.get('/search/:name', async (req, res) => {
 
   const { name } = req.params;
   try {
-    const result = await getArtistSearchResults(name);
-    res.json(result);
+    const records = neo4jRecordsToObjects((await getArtistSearchResults(name)).records);
+    for (const record of records){
+      setArtistDetails(record.spotifyId)
+    }
+    res.json(records);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
