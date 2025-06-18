@@ -6,6 +6,8 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   const [input2, setInput2] = useState(artist2);
   const [suggestions1, setSuggestions1] = useState([]);
   const [suggestions2, setSuggestions2] = useState([]);
+  const innerTimeoutRef1 = useRef();
+  const innerTimeoutRef2 = useRef();
   const [pathData, setPathData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -46,33 +48,46 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
     }
   }, [artist1, artist2, fetchPath]);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (input1.trim() && document.activeElement === input1Ref.current.querySelector('input')) {
-        fetchSuggestions(input1, setSuggestions1);
-        setTimeout(() => {
-          if (document.activeElement === input1Ref.current.querySelector('input')) {
-            fetchSuggestions(input1, setSuggestions1);
-          }
-        }, 3000);
+useEffect(() => {
+  const outerTimeout = setTimeout(() => {
+    if (input1.trim() && document.activeElement === input1Ref.current.querySelector('input')) {
+      fetchSuggestions(input1, setSuggestions1);
+      if (innerTimeoutRef1.current) {
+        clearTimeout(innerTimeoutRef1.current);
       }
-    }, 500);
-    return () => clearTimeout(timeout);
-  }, [input1]);
+      innerTimeoutRef1.current = setTimeout(() => {
+        if (document.activeElement === input1Ref.current.querySelector('input')) {
+          fetchSuggestions(input1, setSuggestions1);
+        }
+      }, 3000);
+    }
+  }, 500);
+  return () => {
+    clearTimeout(outerTimeout);
+    if (innerTimeoutRef1.current) {
+      clearTimeout(innerTimeoutRef1.current);
+    }
+  };
+}, [input1]);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    const outerTimeout = setTimeout(() => {
       if (input2.trim() && document.activeElement === input2Ref.current.querySelector('input')) {
         fetchSuggestions(input2, setSuggestions2);
-        setTimeout(() => {
+        if (innerTimeoutRef2.current) clearTimeout(innerTimeoutRef2.current);
+        innerTimeoutRef2.current = setTimeout(() => {
           if (document.activeElement === input2Ref.current.querySelector('input')) {
             fetchSuggestions(input2, setSuggestions2);
           }
         }, 3000);
       }
     }, 500);
-    return () => clearTimeout(timeout);
+    return () => {
+      clearTimeout(outerTimeout);
+      if (innerTimeoutRef2.current) clearTimeout(innerTimeoutRef2.current);
+    };
   }, [input2]);
+
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -150,7 +165,7 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
       const currentImage = songImages[songIndex] || "https://via.placeholder.com/48";
       const currentUri = songUris[songIndex] || null;
 
-      const artistImage = (image) => image || require('../resources/putidevil-miku-questionmark.jpg');
+      const artistImage = (image) => (image == "" || image == " ") ? require('../resources/putidevil-miku-questionmark.jpg') : image;
       const spotifyLink = (id) => `https://open.spotify.com/artist/${id}`;
 
       elements.push(
