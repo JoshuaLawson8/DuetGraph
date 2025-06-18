@@ -1,3 +1,52 @@
-# https://www.robotstxt.org/robotstxt.html
-User-agent: *
+# Allow major search engines
+User-agent: Googlebot
 Disallow:
+
+User-agent: Bingbot
+Disallow:
+
+User-agent: DuckDuckBot
+Disallow:
+
+User-agent: Slurp
+Disallow:
+
+User-agent: archive.org_bot
+Disallow:
+
+User-agent: ia_archiver
+Disallow:
+
+# Block common scrapers and spam-heavy bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: MegaIndex.ru
+Disallow: /
+
+User-agent: Yandex
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: omgili
+Disallow: /
