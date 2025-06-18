@@ -17,12 +17,13 @@ router.get('/idPath/:id1/:id2', async (req, res) => {
 });
 
 router.get('/search/:name', async (req, res) => {
-
   const { name } = req.params;
   try {
     const records = neo4jRecordsToObjects((await getArtistSearchResults(name)).records);
     for (const record of records){
-      setArtistDetails(record.spotifyId)
+      if(record.image == ""){
+        setArtistDetails(record.spotifyId)
+      }
     }
     res.json(records);
   } catch (e) {
@@ -82,8 +83,8 @@ async function setArtistDetails(spotifyId) {
     const accessToken = accessTokenObject.token;
     keyIndex = accessTokenObject.keyIndex;
     const result = await getArtistDetails(accessToken, spotifyId);
-    // if 0, set to -1 so we know it's been checked
-    updateArtistDetails(spotifyId, { popularity: result.popularity === 0 ? -1 : result.popularity, image: result.images.length > 0 ? result.images[0].url : ""})
+    // if 0, set to -1 so we know it's been checkedm and " " for url
+    updateArtistDetails(spotifyId, { popularity: result.popularity === 0 ? -1 : result.popularity, image: result.images.length > 0 ? result.images[0].url : " "})
     return result.popularity;
   } catch (err) {
     if (err.message.includes("429") && keyIndex !== undefined) {
