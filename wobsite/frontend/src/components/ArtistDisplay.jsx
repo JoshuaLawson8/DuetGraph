@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
@@ -12,12 +12,14 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   const [songIndices, setSongIndices] = useState({});
   const navigate = useNavigate();
 
+  const input1Ref = useRef();
+  const input2Ref = useRef();
+
   const fetchPath = useCallback(async (a1, a2) => {
     if (!a1.trim() || !a2.trim()) {
       setError("Both artist names are required.");
       return;
     }
-
     setLoading(true);
     setError(null);
     try {
@@ -46,17 +48,44 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (input1.trim()) fetchSuggestions(input1, setSuggestions1);
+      if (input1.trim() && document.activeElement === input1Ref.current.querySelector('input')) {
+        fetchSuggestions(input1, setSuggestions1);
+        setTimeout(() => {
+          if (document.activeElement === input1Ref.current.querySelector('input')) {
+            fetchSuggestions(input1, setSuggestions1);
+          }
+        }, 3000);
+      }
     }, 500);
     return () => clearTimeout(timeout);
   }, [input1]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (input2.trim()) fetchSuggestions(input2, setSuggestions2);
+      if (input2.trim() && document.activeElement === input2Ref.current.querySelector('input')) {
+        fetchSuggestions(input2, setSuggestions2);
+        setTimeout(() => {
+          if (document.activeElement === input2Ref.current.querySelector('input')) {
+            fetchSuggestions(input2, setSuggestions2);
+          }
+        }, 3000);
+      }
     }, 500);
     return () => clearTimeout(timeout);
   }, [input2]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (input1Ref.current && !input1Ref.current.contains(e.target)) {
+        setSuggestions1([]);
+      }
+      if (input2Ref.current && !input2Ref.current.contains(e.target)) {
+        setSuggestions2([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchSuggestions = async (name, setter) => {
     try {
@@ -74,18 +103,28 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
     navigate(`/${encodeURIComponent(input1)}/${encodeURIComponent(input2)}`);
   };
 
-  const renderSuggestions = (suggestions, setter) => (
+  const getImageSrc = (image) => {
+    if (image === "") {
+      return require("../components/icegif-loading.gif");
+    }
+    if (image === " ") {
+      return require("../resources/putidevil-miku-questionmark.jpg");
+    }
+    return image;
+  };
+
+  const renderSuggestions = (suggestions, setter, clearSuggestions) => (
     <div className="bg-white border border-gray-300 rounded-md mt-1 shadow max-h-48 overflow-y-auto">
       {suggestions.map((s) => (
-        <div key={s.spotifyId} onClick={() => setter(s.name)} className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2">
-          <img src={s.image?.trim() ? s.image : "https://via.placeholder.com/32"} alt={s.name} className="w-8 h-8 rounded object-cover" />
+        <div key={s.spotifyId} onClick={() => { setter(s.name); clearSuggestions(); }} className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2">
+          <img src={getImageSrc(s.image)} alt={s.name} className="w-8 h-8 rounded object-cover" />
           <span className="truncate">{s.name}</span>
         </div>
       ))}
     </div>
   );
 
-    const changeSong = (key, direction, length) => {
+  const changeSong = (key, direction, length) => {
     setSongIndices(prev => {
       const current = prev[key] || 0;
       const next = (current + direction + length) % length;
@@ -164,15 +203,15 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4 relative">
-        <div>
+        <div ref={input1Ref}>
           <input type="text" placeholder="Type artist 1..." value={input1} onChange={(e) => setInput1(e.target.value)}
             className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
-          {suggestions1.length > 0 && renderSuggestions(suggestions1, setInput1)}
+          {suggestions1.length > 0 && renderSuggestions(suggestions1, setInput1, () => setSuggestions1([]))}
         </div>
-        <div>
+        <div ref={input2Ref}>
           <input type="text" placeholder="Type artist 2..." value={input2} onChange={(e) => setInput2(e.target.value)}
             className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
-          {suggestions2.length > 0 && renderSuggestions(suggestions2, setInput2)}
+          {suggestions2.length > 0 && renderSuggestions(suggestions2, setInput2, () => setSuggestions2([]))}
         </div>
         <button onClick={handleSearch} className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-full"
           disabled={loading}>
