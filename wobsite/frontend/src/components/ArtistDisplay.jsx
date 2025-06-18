@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   const [input1, setInput1] = useState(artist1);
   const [input2, setInput2] = useState(artist2);
+  const [suggestions1, setSuggestions1] = useState([]);
+  const [suggestions2, setSuggestions2] = useState([]);
   const [pathData, setPathData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -42,11 +44,48 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
     }
   }, [artist1, artist2, fetchPath]);
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (input1.trim()) fetchSuggestions(input1, setSuggestions1);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [input1]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (input2.trim()) fetchSuggestions(input2, setSuggestions2);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [input2]);
+
+  const fetchSuggestions = async (name, setter) => {
+    try {
+      const res = await fetch(`/api/search/${encodeURIComponent(name)}`);
+      if (!res.ok) throw new Error("Failed to fetch suggestions");
+      const data = await res.json();
+      setter(data);
+    } catch (err) {
+      console.error("Suggestion fetch error", err);
+      setter([]);
+    }
+  };
+
   const handleSearch = () => {
     navigate(`/${encodeURIComponent(input1)}/${encodeURIComponent(input2)}`);
   };
 
-  const changeSong = (key, direction, length) => {
+  const renderSuggestions = (suggestions, setter) => (
+    <div className="bg-white border border-gray-300 rounded-md mt-1 shadow max-h-48 overflow-y-auto">
+      {suggestions.map((s) => (
+        <div key={s.spotifyId} onClick={() => setter(s.name)} className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2">
+          <img src={s.image?.trim() ? s.image : "https://via.placeholder.com/32"} alt={s.name} className="w-8 h-8 rounded object-cover" />
+          <span className="truncate">{s.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+    const changeSong = (key, direction, length) => {
     setSongIndices(prev => {
       const current = prev[key] || 0;
       const next = (current + direction + length) % length;
@@ -124,10 +163,19 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4">
-        <input type="text" placeholder="Type artist 1..." value={input1} onChange={(e) => setInput1(e.target.value)} className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
-        <input type="text" placeholder="Type artist 2..." value={input2} onChange={(e) => setInput2(e.target.value)} className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
-        <button onClick={handleSearch} className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-full" disabled={loading}>
+      <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4 relative">
+        <div>
+          <input type="text" placeholder="Type artist 1..." value={input1} onChange={(e) => setInput1(e.target.value)}
+            className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
+          {suggestions1.length > 0 && renderSuggestions(suggestions1, setInput1)}
+        </div>
+        <div>
+          <input type="text" placeholder="Type artist 2..." value={input2} onChange={(e) => setInput2(e.target.value)}
+            className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
+          {suggestions2.length > 0 && renderSuggestions(suggestions2, setInput2)}
+        </div>
+        <button onClick={handleSearch} className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-full"
+          disabled={loading}>
           {loading ? "Loading..." : "Find Connection"}
         </button>
         {error && <p className="text-red-600 text-sm sm:text-base">{error}</p>}
