@@ -165,7 +165,7 @@ useEffect(() => {
       const currentImage = songImages[songIndex] || "https://via.placeholder.com/48";
       const currentUri = songUris[songIndex] || null;
 
-      const artistImage = (image) => (image == "" || image == " ") ? require('../resources/putidevil-miku-questionmark.jpg') : image;
+      const artistImage = (image) => (image === "" || image === " ") ? require('../resources/putidevil-miku-questionmark.jpg') : image;
       const spotifyLink = (id) => `https://open.spotify.com/artist/${id}`;
 
       elements.push(
