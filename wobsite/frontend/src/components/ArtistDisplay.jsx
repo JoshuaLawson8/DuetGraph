@@ -114,7 +114,7 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   };
 
   const renderSuggestions = (suggestions, setter, clearSuggestions) => (
-    <div className="bg-white border border-gray-300 rounded-md mt-1 shadow max-h-48 overflow-y-auto">
+    <div className="absolute z-10 bg-white border border-gray-300 rounded-md mt-1 shadow max-h-48 overflow-y-auto w-full">
       {suggestions.map((s) => (
         <div key={s.spotifyId} onClick={() => { setter(s.name); clearSuggestions(); }} className="p-2 hover:bg-gray-100 cursor-pointer flex items-center space-x-2">
           <img src={getImageSrc(s.image)} alt={s.name} className="w-8 h-8 rounded object-cover" />
@@ -203,12 +203,12 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   return (
     <div className="flex flex-col h-full">
       <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4 relative">
-        <div ref={input1Ref}>
+        <div ref={input1Ref} className="relative">
           <input type="text" placeholder="Type artist 1..." value={input1} onChange={(e) => setInput1(e.target.value)}
             className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
           {suggestions1.length > 0 && renderSuggestions(suggestions1, setInput1, () => setSuggestions1([]))}
         </div>
-        <div ref={input2Ref}>
+        <div ref={input2Ref} className="relative">
           <input type="text" placeholder="Type artist 2..." value={input2} onChange={(e) => setInput2(e.target.value)}
             className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
           {suggestions2.length > 0 && renderSuggestions(suggestions2, setInput2, () => setSuggestions2([]))}
