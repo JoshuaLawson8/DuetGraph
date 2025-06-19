@@ -7,6 +7,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<DuetGraph />} />
         <Route path="/:artist1/:artist2" element={<DuetGraph />} />
+        <Route path="/:artist1" element={<DuetGraph />} />
+        <Route path="/*" element={<DuetGraph />} />
+        <Route path="*" element={<DuetGraph />} />
       </Routes>
     </Router>
   );

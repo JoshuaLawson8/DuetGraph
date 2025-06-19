@@ -115,6 +115,8 @@ useEffect(() => {
   };
 
   const handleSearch = () => {
+    if(!input1 || !input2)
+      return
     navigate(`/${encodeURIComponent(input1)}/${encodeURIComponent(input2)}`);
   };
 
@@ -177,13 +179,7 @@ useEffect(() => {
       );
 
       elements.push(
-        <div key={`song-${index}`} onClick={() => {
-          if (currentUri) {
-            const parts = currentUri.split(":");
-            const url = parts.length === 3 ? `https://open.spotify.com/track/${parts[2]}` : currentUri;
-            window.location.href = url;
-          }
-        }}
+        <a key={`song-${index}`} href={`${currentUri ? `https://open.spotify.com/track/${currentUri.split(":")[2]}` : ""}`} target="_blank" rel="noopener noreferrer"
           className="bg-gray-100 p-2 sm:p-4 rounded-lg shadow w-full sm:max-w-lg flex items-center justify-between cursor-pointer hover:bg-gray-200">
           <button onClick={(e) => { e.stopPropagation(); changeSong(key, -1, songNames.length); }}
             className={`text-xl font-bold ${songIndex === 0 ? 'text-gray-400' : ''}`}
@@ -198,7 +194,7 @@ useEffect(() => {
           <button onClick={(e) => { e.stopPropagation(); changeSong(key, 1, songNames.length); }}
             className={`text-xl font-bold ${songIndex === songNames.length - 1 ? 'text-gray-400' : ''}`}
             disabled={songIndex === songNames.length - 1}>▶</button>
-        </div>
+        </a>
       );
 
       if (index === segments.length - 1) {
