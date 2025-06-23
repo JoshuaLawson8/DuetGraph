@@ -25,7 +25,9 @@ export default function DuetGraph() {
           </p>
         </div>
         <div className="text-sm text-center sm:text-left mt-4 sm:mt-0">
-          Who made this?? | Feedback
+        <a href="https://joshblag.com" target="_blank" rel="noreferrer">
+          Who made this?? 
+        </a> | Feedback
         </div>
       </div>
 
