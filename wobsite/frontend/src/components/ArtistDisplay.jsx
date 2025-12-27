@@ -20,6 +20,7 @@ export default function ArtistDisplay({ artist1 = "", artist2 = "" }) {
   const fetchPath = useCallback(async (a1, a2) => {
     if (!a1.trim() || !a2.trim()) {
       setError("Both artist names are required.");
+      console.log("abc")
       return;
     }
     setLoading(true);
@@ -212,21 +213,22 @@ useEffect(() => {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full text-center">
       <div className="space-y-2 sm:space-y-4 mb-2 sm:mb-4 relative">
         <div ref={input1Ref} className="relative">
-          <input type="text" placeholder="Type artist 1..." value={input1} onChange={(e) => setInput1(e.target.value)}
-            className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
+          <input type="text" placeholder="Taylor Swift" value={input1} onChange={(e) => setInput1(e.target.value)}
+            className="w-[300px] text-lg p-3 border border-gray-400 rounded-md text-center" />
           {suggestions1.length > 0 && renderSuggestions(suggestions1, setInput1, () => setSuggestions1([]))}
         </div>
+        <div className="text-gray-400">to</div>
         <div ref={input2Ref} className="relative">
-          <input type="text" placeholder="Type artist 2..." value={input2} onChange={(e) => setInput2(e.target.value)}
-            className="p-2 sm:p-3 border border-gray-400 rounded-md w-full" />
+          <input type="text" placeholder="Kanye West" value={input2} onChange={(e) => setInput2(e.target.value)}
+            className="w-[300px] text-lg p-3 border border-gray-400 rounded-md text-center" />
           {suggestions2.length > 0 && renderSuggestions(suggestions2, setInput2, () => setSuggestions2([]))}
         </div>
-        <button onClick={handleSearch} className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-full"
+        <button onClick={handleSearch} className="bg-blue-700 text-white py-2 rounded-md hover:bg-blue-800 disabled:opacity-50 w-[150px]"
           disabled={loading}>
-          {loading ? "Loading..." : "Find Connection"}
+          {loading ? "Loading..." : "Search"}
         </button>
         {error && <p className="text-red-600 text-sm sm:text-base">{error}</p>}
       </div>
